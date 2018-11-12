@@ -1,0 +1,8 @@
+
+https://www.kaggle.com/shravankumar9892/image-colorization/home
+
+
+https://hackernoon.com/colorising-black-white-photos-using-deep-learning-4da22a05f531
+https://blog.floydhub.com/colorizing-b-w-photos-with-neural-networks/
+http://richzhang.github.io/colorization/
+
