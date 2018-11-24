@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Nov 17 13:37:52 2018
-@author: ryangreen
+@author: ryangreen & justinelo
 """
 import numpy as np
 from scipy import misc
@@ -28,13 +28,16 @@ pred_AB = np.round(np.load("10_AB_predictions.npy", mmap_mode='r') * 255).astype
 #   4D color arrays should be in shape (num_samples, width, height, channels)
 #   3D grayscale array should be in shape (num_samples, width, height)
 #   prints according to RGB values -- must be converted
-def comparePredictions(L_channel, AB_channel, pred_AB, plot=True):
+def comparePredictions(L_channel, AB_channel, pred_AB, plot=False):
     assert AB_channel.shape == pred_AB.shape
     assert L_channel.shape[0] == AB_channel.shape[0]
     num_samples = L_channel.shape[0]
     
     for index in range(num_samples):
-        synthesized_img_array = np.stack([L_channel[index,:,:], pred_AB[index,:,:,0],pred_AB[index,:,:,1]], axis=2)
+        synthesized_img_array = np.stack([L_channel[index,:,:], 
+                                          pred_AB[index,:,:,0],
+                                          pred_AB[index,:,:,1]], 
+                                            axis=2)
         misc.imsave('guess' + str(index) + '.png', synthesized_img_array)
         if (plot):
 #            plt.imshow(synthesized_img_array)
@@ -43,7 +46,9 @@ def comparePredictions(L_channel, AB_channel, pred_AB, plot=True):
 #            plt.show()
             display_LAB_img(synthesized_img_array, 'Predict', index)
 
-        synthesized_img_array = np.stack([L_channel[index,:,:], AB_channel[index,:,:,0], AB_channel[index,:,:,1]], axis=2)
+        synthesized_img_array = np.stack([L_channel[index,:,:], 
+                                          AB_channel[index,:,:,0], 
+                                          AB_channel[index,:,:,1]], axis=2)
         misc.imsave('truth' + str(index) + '.png', synthesized_img_array)
         if (plot):
 #            plt.imshow(synthesized_img_array)

@@ -56,13 +56,13 @@ def training_pipeline(colorizer, l_channel, ab_true, learning_rate, batch_size, 
     }#, irr, read_batched_examples
 
 
-def evaluation_pipeline(colorizer, l_channel, ab_channel, number_of_images):
+def evaluation_pipeline(colorizer, l_channel, ab_channel):
     # Set up validation (input queues, graph)
     imgs_ab_val = colorizer.build(l_channel)
     cost, summary = loss_with_metrics(imgs_ab_val, ab_channel, 'validation')
     return {
 #        'imgs_l': l_channel,
-        'imgs_ab': imgs_ab_val,
+        'predicted_ab': imgs_ab_val,
 #        'imgs_true_ab': ab_channel,
         'cost': cost,
         'summary': summary
