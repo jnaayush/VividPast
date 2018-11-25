@@ -19,7 +19,7 @@ from training_utils import training_pipeline, checkpointing_system, evaluation_p
     
     
 # PARAMETERS
-run_id = 'testrun2'
+run_id = 'no_seg_training1'
 epochs = 30
 num_test_samples = 50
 total_train_samples = 5000
@@ -105,7 +105,7 @@ with sess.as_default():
             # Save the variables to disk
             save_path = saver.save(sess, checkpoint_paths, global_step)
             # Save predictions for validation set
-            np.save('test_predictions', res['predicted_ab'])
+            np.save('test_predictions' + '_' + run_id, res['predicted_ab'])
 #            import_data_test_jlo.comparePredictions(testing_data_L, testing_data_AB, res['predicted_ab']):
             print("Model saved in: %s" % save_path, run_id)
         print('----------------------------------------')
