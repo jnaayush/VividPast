@@ -19,7 +19,7 @@ from training_utils import training_pipeline, checkpointing_system, evaluation_p
     
     
 # PARAMETERS
-run_id = 'no_seg_training1'
+run_id = 'no_seg_koala1'
 epochs = 30
 num_test_samples = 50
 total_train_samples = 5000
@@ -31,10 +31,10 @@ batches = total_train_samples // batch_size
 ##### LOAD DATA ####
 
 L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[num_test_samples:total_train_samples+num_test_samples, :, :]
-L_channel = (L_channel / 255).astype('float32')
+L_channel = ((L_channel / 127.5) -1).astype('float64')
 L_channel = np.expand_dims(L_channel, axis=3)
 AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[num_test_samples:total_train_samples+num_test_samples, :, :]
-AB_channel = (AB_channel / 255).astype('float32')
+AB_channel = ((AB_channel / 127.5) -1).astype('float64')
 
 
 # Create tf Dataset and iterator for feeding data in batches

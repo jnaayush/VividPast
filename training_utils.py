@@ -25,15 +25,15 @@ import tensorflow as tf
 
 def loss_with_metrics(img_ab_out, img_ab_true, name=''):
     # Loss is mean square erros
-#    cost = tf.reduce_mean(
-#        tf.squared_difference(img_ab_out, img_ab_true), name="mse")
-    cost = tf.losses.absolute_difference(
-    img_ab_true,
-    img_ab_out,
-    weights=1.0,
-    scope=None,
-    loss_collection=tf.GraphKeys.LOSSES,
-    reduction=tf.losses.Reduction.SUM_BY_NONZERO_WEIGHTS)
+    cost = tf.reduce_mean(
+        tf.squared_difference(img_ab_out, img_ab_true), name="mse")
+#    cost = tf.losses.absolute_difference(
+#    img_ab_true,
+#    img_ab_out,
+#    weights=1.0,
+#    scope=None,
+#    loss_collection=tf.GraphKeys.LOSSES,
+#    reduction=tf.losses.Reduction.SUM_BY_NONZERO_WEIGHTS)
     # Metrics for tensorboard
     summary = tf.summary.scalar('cost ' + name, cost)
     return cost, summary
