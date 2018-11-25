@@ -70,6 +70,6 @@ def build_decoder(fused_layer_length):
     # Now 112x112x64
     model.add(UpSampling2D((2, 2)))
     # Now 224x224x64
-    model.add(Conv2D(2, (1, 1), activation='tanh', padding='same'))
+    model.add(Conv2D(2, (1, 1), activation='sigmoid', padding='same'))
     # Now 224x224x2
     return model

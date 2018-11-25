@@ -10,9 +10,9 @@ import matplotlib.pyplot as plt
 import cv2
 #from skimage import lab2rgb
 
-L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[:10, :, :]
-AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[:10, :, :]
-pred_AB = np.round(np.load("10_AB_predictions.npy", mmap_mode='r') * 255).astype('uint8')
+L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[50:60, :, :]
+AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[50:60, :, :]
+pred_AB = np.round(np.load("test_predictions.npy", mmap_mode='r') * 255).astype('uint8')
 
 
 #def scale_LAB(array):

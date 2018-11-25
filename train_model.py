@@ -20,9 +20,9 @@ from training_utils import training_pipeline, checkpointing_system, evaluation_p
     
 # PARAMETERS
 run_id = 'testrun2'
-epochs = 2
-num_test_samples = 10
-total_train_samples = 50
+epochs = 30
+num_test_samples = 50
+total_train_samples = 5000
 batch_size = 10
 learning_rate = 0.001
 batches = total_train_samples // batch_size
@@ -30,21 +30,21 @@ batches = total_train_samples // batch_size
 
 ##### LOAD DATA ####
 
-L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[:total_train_samples+num_test_samples, :, :]
+L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[num_test_samples:total_train_samples+num_test_samples, :, :]
 L_channel = (L_channel / 255).astype('float32')
 L_channel = np.expand_dims(L_channel, axis=3)
-AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[:total_train_samples+num_test_samples, :, :]
+AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[num_test_samples:total_train_samples+num_test_samples, :, :]
 AB_channel = (AB_channel / 255).astype('float32')
 
 
 # Create tf Dataset and iterator for feeding data in batches
-training_data = tf.data.Dataset.from_tensor_slices((L_channel[:total_train_samples,:,:], AB_channel[:total_train_samples,:,:]))
+training_data = tf.data.Dataset.from_tensor_slices((L_channel, AB_channel))
 training_data = training_data.repeat().shuffle(buffer_size=50).batch(batch_size)
 iterator = training_data.make_one_shot_iterator()
 
 # make Validation Dataset
-testing_data_L = L_channel[total_train_samples:total_train_samples+num_test_samples,:,:]
-testing_data_AB = AB_channel[total_train_samples:total_train_samples+num_test_samples,:,:]
+testing_data_L = L_channel[:num_test_samples,:,:]
+testing_data_AB = AB_channel[:num_test_samples,:,:]
 
 ###### BUILD MODEL #######
 
