@@ -8,6 +8,7 @@ Created on Fri Nov 23 21:42:26 2018
 
 import time
 from os.path import join
+from numpy import save
 
 from save_config import dir_checkpoints, dir_root, maybe_create_folder
 #import numpy as np
@@ -25,15 +26,15 @@ import tensorflow as tf
 
 def loss_with_metrics(img_ab_out, img_ab_true, name=''):
     # Loss is mean square erros
-#    cost = tf.reduce_mean(
-#        tf.squared_difference(img_ab_out, img_ab_true), name="mse")
-    cost = tf.losses.absolute_difference(
-        img_ab_true,
-        img_ab_out,
-        weights=1.0,
-        scope=None,
-        loss_collection=tf.GraphKeys.LOSSES,
-        reduction=tf.losses.Reduction.SUM_BY_NONZERO_WEIGHTS)
+    cost = tf.reduce_mean(
+        tf.squared_difference(img_ab_out, img_ab_true), name="mse")
+#    cost = tf.losses.absolute_difference(
+#        img_ab_true,
+#        img_ab_out,
+#        weights=1.0,
+#        scope=None,
+#        loss_collection=tf.GraphKeys.LOSSES,
+#        reduction=tf.losses.Reduction.SUM_BY_NONZERO_WEIGHTS)
     # Metrics for tensorboard
     summary = tf.summary.scalar('cost ' + name, cost)
     return cost, summary
@@ -86,6 +87,10 @@ def checkpointing_system(run_id):
     
     saver = tf.train.Saver()
     checkpoint_paths = join(dir_checkpoints, run_id)
-    latest_checkpoint = tf.train.latest_checkpoint(checkpoint_paths)
+    latest_checkpoint = tf.train.latest_checkpoint(dir_checkpoints)
     return  saver, checkpoint_paths, latest_checkpoint
 
+def savePredictions(run_id, epoch, predictions):
+    save_dir = join('test_predictions', run_id)
+    maybe_create_folder(save_dir)
+    save(save_dir + '/' + 'predicted_ab' + '_ep' + str(epoch+1), predictions)

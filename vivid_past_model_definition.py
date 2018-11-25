@@ -40,25 +40,25 @@ def build_encoder():
     model = tf.keras.Sequential(name='encoder')
     model.add(InputLayer(input_shape=(None,None,1), dtype='float32'))
     # Input: 224x224x1
-#    model.add(Conv2D(64, (3, 3), activation='relu', padding='same', strides=2))
-#    # Now: 112x112x64
-#    model.add(Conv2D(128, (2, 2), activation='tanh', padding='same', strides=1))
-#    # Now: 112x112x128
-#    model.add(Conv2D(128, (3, 3), activation='tanh', padding='same', strides=2))
-#    # Now: 64x64x128
-#    model.add(Conv2D(256, (2, 2), activation='tanh', padding='same', strides=1))
-#    # Now: 64x64x256
-#    model.add(Conv2D(256, (3, 3), activation='tanh', padding='same', strides=2))
-#    # Now: 32x32x256
-    
+    model.add(Conv2D(64, (3, 3), activation='relu', padding='same', strides=1))
+    # Now: 224x224x64
     model.add(Conv2D(64, (3, 3), activation='relu', padding='same', strides=2))
-    # 112
-    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
+    # Now: 112x112x128
     model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
-    # 56
-    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
-    model.add(Conv2D(256, (3, 3), activation='relu', padding='same', strides=2))
-    # 28
+    # Now: 56x56x128
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
+    # Now: 28x28x256
+    model.add(Conv2D(256, (3, 3), activation='relu', padding='same', strides=1))
+    # Now: 28x28x256
+    
+#    model.add(Conv2D(64, (3, 3), activation='relu', padding='same', strides=2))
+#    # 112
+#    model.add(Conv2D(128, (3, 3), activation='relu', padding='same'))
+#    model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
+#    # 56
+#    model.add(Conv2D(256, (3, 3), activation='relu', padding='same'))
+#    model.add(Conv2D(256, (3, 3), activation='relu', padding='same', strides=2))
+#    # 28
     
 #    # for testing -- REMOVE
 #    model.add(Conv2D(64, (3, 3), activation='relu', padding='same', strides=4))

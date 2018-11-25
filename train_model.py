@@ -14,16 +14,16 @@ import tensorflow as tf
 
 from vivid_past_model_definition import VividPastAutoEncoder
 
-from training_utils import training_pipeline, checkpointing_system, evaluation_pipeline
+from training_utils import training_pipeline, checkpointing_system, evaluation_pipeline, savePredictions
 #import import_data_test_jlo
     
     
 # PARAMETERS
-run_id = 'no_seg_koala1'
-epochs = 30
+run_id = 'no_seg_small1'
+epochs = 50
 num_test_samples = 50
-total_train_samples = 2000
-batch_size = 10
+total_train_samples = 1000
+batch_size = 20
 learning_rate = 0.001
 batches = total_train_samples // batch_size
 
@@ -55,7 +55,7 @@ iterator = training_data.make_one_shot_iterator()
 testing_data_L = L_channel[:num_test_samples,:,:]
 testing_data_AB = AB_channel[:num_test_samples,:,:]
 
-# get next batch
+## get first batch
 l_channel, ab_true = iterator.get_next()
 training = training_pipeline(colorizer, l_channel, ab_true, learning_rate, batch_size, total_train_samples)
 evaluation = evaluation_pipeline(colorizer, testing_data_L, testing_data_AB)
@@ -85,6 +85,7 @@ with sess.as_default():
         # Training step
         for batch in range(batches):
             print('Batch: {}/{}'.format(batch+1, batches))
+            # get next batch
             res = sess.run(training)
             global_step = res['global_step']
             print('Cost: {} Global step: {}'
@@ -95,15 +96,15 @@ with sess.as_default():
         res = sess.run(evaluation)
         epoch_cost = res['cost']
         print()
-        print('Epoch {} Ended. Validating...'.format(epoch))
+        print('Epoch {} Ended. Validating...'.format(epoch+1))
         print('Validation loss: {}'.format(epoch_cost))
         if (low_loss < 0 or low_loss > epoch_cost):
 #            lowest_validation
             print('Improved Loss. Saving model...')
             # Save the variables to disk
-            save_path = saver.save(sess, checkpoint_paths, global_step)
+            save_path = saver.save(sess, checkpoint_paths)
             # Save predictions for validation set
-            np.save('test_predictions' + '_' + run_id + '_' + (epoch+1), res['predicted_ab'])
+            savePredictions(run_id, epoch, res['predicted_ab'])
 #            import_data_test_jlo.comparePredictions(testing_data_L, testing_data_AB, res['predicted_ab']):
             print("Model saved in: %s" % save_path, run_id)
         print('----------------------------------------')
