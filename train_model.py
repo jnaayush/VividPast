@@ -22,10 +22,19 @@ from training_utils import training_pipeline, checkpointing_system, evaluation_p
 run_id = 'no_seg_koala1'
 epochs = 30
 num_test_samples = 50
-total_train_samples = 1000
+total_train_samples = 2000
 batch_size = 10
 learning_rate = 0.001
 batches = total_train_samples // batch_size
+
+
+###### BUILD MODEL #######
+
+
+sess = tf.Session()
+
+# Initialize colorizer model
+colorizer = VividPastAutoEncoder(256)
 
 
 ##### LOAD DATA ####
@@ -45,17 +54,6 @@ iterator = training_data.make_one_shot_iterator()
 # make Validation Dataset
 testing_data_L = L_channel[:num_test_samples,:,:]
 testing_data_AB = AB_channel[:num_test_samples,:,:]
-
-###### BUILD MODEL #######
-
-# START
-#saver = tf.train.Saver()
-
-sess = tf.Session()
-#K.set_session(sess)
-
-# Build the network and the various operations
-colorizer = VividPastAutoEncoder(256)
 
 # get next batch
 l_channel, ab_true = iterator.get_next()
@@ -105,7 +103,7 @@ with sess.as_default():
             # Save the variables to disk
             save_path = saver.save(sess, checkpoint_paths, global_step)
             # Save predictions for validation set
-            np.save('test_predictions' + '_' + run_id, res['predicted_ab'])
+            np.save('test_predictions' + '_' + run_id + '_' + (epoch+1), res['predicted_ab'])
 #            import_data_test_jlo.comparePredictions(testing_data_L, testing_data_AB, res['predicted_ab']):
             print("Model saved in: %s" % save_path, run_id)
         print('----------------------------------------')
