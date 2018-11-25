@@ -22,7 +22,7 @@ from training_utils import training_pipeline, checkpointing_system, evaluation_p
 run_id = 'no_seg_koala1'
 epochs = 30
 num_test_samples = 50
-total_train_samples = 5000
+total_train_samples = 1000
 batch_size = 10
 learning_rate = 0.001
 batches = total_train_samples // batch_size
