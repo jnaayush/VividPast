@@ -31,10 +31,10 @@ batches = total_train_samples // batch_size
 ##### LOAD DATA ####
 
 L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[num_test_samples:total_train_samples+num_test_samples, :, :]
-L_channel = ((L_channel / 127.5) -1).astype('float64')
+L_channel = ((L_channel / 127.5) -1).astype('float32')
 L_channel = np.expand_dims(L_channel, axis=3)
 AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[num_test_samples:total_train_samples+num_test_samples, :, :]
-AB_channel = ((AB_channel / 127.5) -1).astype('float64')
+AB_channel = ((AB_channel / 127.5) -1).astype('float32')
 
 
 # Create tf Dataset and iterator for feeding data in batches
