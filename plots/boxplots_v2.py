@@ -8,7 +8,7 @@ Created on Sun Nov 25 22:05:16 2018
 
 import plotly
 import plotly.graph_objs as go
-#plotly.offline.init_notebook_mode(connected=True)
+plotly.offline.init_notebook_mode(connected=True)
 import numpy as np
 
 # PLOT WITHOUT FUSION:
