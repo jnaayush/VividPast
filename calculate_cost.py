@@ -38,4 +38,4 @@ def calculate_cost_per_category(true_ab, rescaled_predicted_ab, mask_count):
         if (counts[j] == 0):
             counts[j] = 1
         
-    return sums / counts
+    return sums / counts, counts
