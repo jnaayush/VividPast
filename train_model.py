@@ -7,8 +7,8 @@ Created on Fri Nov 23 18:50:04 2018
 """
 
 import numpy as np
-import os
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+#import os
+#os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 import tensorflow as tf
 
@@ -19,11 +19,11 @@ from training_utils import training_pipeline, checkpointing_system, evaluation_p
     
     
 # PARAMETERS
-run_id = 'no_seg_training1'
-epochs = 30
-num_test_samples = 50
-total_train_samples = 5000
-batch_size = 10
+run_id = 'variable_test'
+total_epochs = 30
+num_test_samples = 1
+total_train_samples = 4
+batch_size = 2
 learning_rate = 0.001
 batches = total_train_samples // batch_size
 
@@ -55,7 +55,7 @@ sess = tf.Session()
 #K.set_session(sess)
 
 # Build the network and the various operations
-colorizer = VividPastAutoEncoder(256)
+colorizer = VividPastAutoEncoder(64)
 
 # get next batch
 l_channel, ab_true = iterator.get_next()
@@ -64,14 +64,14 @@ evaluation = evaluation_pipeline(colorizer, testing_data_L, testing_data_AB)
 #summary_writer = metrics_system(run_id, sess)
 saver, checkpoint_paths, latest_checkpoint = checkpointing_system(run_id)
 
-with sess.as_default():
-    # Initialize
-    sess.run(tf.global_variables_initializer())
-    sess.run(tf.local_variables_initializer())
-    
-#    lowest_validation_loss = tf.Variable(-1, name='lowest_validation_loss')
-    low_loss = -1;
+#low_loss = tf.Variable(-1, name='low_loss', trainable=False)
+epoch_id = tf.Variable(1, name='epoch_id', trainable=False)
+low_loss = -1;
 
+with sess.as_default():
+#    # Initialize
+#    sess.run(tf.global_variables_initializer())
+#    sess.run(tf.local_variables_initializer())
 
     # Restore
     if latest_checkpoint is not None:
@@ -80,10 +80,17 @@ with sess.as_default():
         print(' done!', run_id)
     else:
         print('No checkpoint found in: {}'.format(checkpoint_paths), run_id)
+        
+        # Initialize
+    sess.run(tf.global_variables_initializer())
+    sess.run(tf.local_variables_initializer())
 
-    for epoch in range(epochs):
+    epochs_not_finished = tf.less(epoch_id,total_epochs)
+    not_finished = sess.run(epochs_not_finished)
+    while not_finished:
+        epoch = sess.run(epoch_id)
         print('Starting epoch: {} (total images {})'
-                  .format(epoch+1, total_train_samples))
+                  .format(epoch, total_train_samples))
         # Training step
         for batch in range(batches):
             print('Batch: {}/{}'.format(batch+1, batches))
@@ -98,15 +105,20 @@ with sess.as_default():
         epoch_cost = res['cost']
         print()
         print('Epoch {} Ended. Validating...'.format(epoch))
+        epoch_id = epoch_id + 1
+#        print(sess.run(epoch_id))
         print('Validation loss: {}'.format(epoch_cost))
+        
         if (low_loss < 0 or low_loss > epoch_cost):
 #            lowest_validation
             print('Improved Loss. Saving model...')
+#            tf.assign(low_loss, epoch_cost)
             # Save the variables to disk
             save_path = saver.save(sess, checkpoint_paths, global_step)
             # Save predictions for validation set
-            np.save('test_predictions' + '_' + run_id, res['predicted_ab'])
+#            np.save('test_predictions' + '_' + run_id, res['predicted_ab'])
 #            import_data_test_jlo.comparePredictions(testing_data_L, testing_data_AB, res['predicted_ab']):
             print("Model saved in: %s" % save_path, run_id)
         print('----------------------------------------')
+        not_finished = sess.run(epochs_not_finished)
 

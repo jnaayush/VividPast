@@ -10,9 +10,10 @@ import matplotlib.pyplot as plt
 import cv2
 #from skimage import lab2rgb
 
-L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[50:60, :, :]
-AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[50:60, :, :]
-pred_AB = np.round(np.load("test_predictions.npy", mmap_mode='r') * 255).astype('uint8')
+L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[:50, :, :]
+AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[:50, :, :]
+pred_AB = np.round((np.load("eval_predictions/test_eval/predicted_ab_0-50_cost0.020439588.npy", mmap_mode='r') +1)*127.5).astype('uint8')
+
 
 
 #def scale_LAB(array):
@@ -28,7 +29,7 @@ pred_AB = np.round(np.load("test_predictions.npy", mmap_mode='r') * 255).astype(
 #   4D color arrays should be in shape (num_samples, width, height, channels)
 #   3D grayscale array should be in shape (num_samples, width, height)
 #   prints according to RGB values -- must be converted
-def comparePredictions(L_channel, AB_channel, pred_AB, plot=False):
+def comparePredictions(L_channel, AB_channel, pred_AB, plot=False, save=False):
     assert AB_channel.shape == pred_AB.shape
     assert L_channel.shape[0] == AB_channel.shape[0]
     num_samples = L_channel.shape[0]
@@ -38,24 +39,30 @@ def comparePredictions(L_channel, AB_channel, pred_AB, plot=False):
                                           pred_AB[index,:,:,0],
                                           pred_AB[index,:,:,1]], 
                                             axis=2)
-        misc.imsave('guess' + str(index) + '.png', synthesized_img_array)
-        if (plot):
+#        if (save):
+#            misc.imsave('guess' + str(index) + '.png', synthesized_img_array)
+#        if (plot):
 #            plt.imshow(synthesized_img_array)
 #            plt.axis('off')
 #            plt.title('Predicted Img #' + str(index))
 #            plt.show()
-            display_LAB_img(synthesized_img_array, 'Predict', index)
+        rgb = display_LAB_img(synthesized_img_array, 'Predict', index)
+        if (save):
+            misc.imsave('guess' + str(index) + '.png', rgb)
 
         synthesized_img_array = np.stack([L_channel[index,:,:], 
                                           AB_channel[index,:,:,0], 
                                           AB_channel[index,:,:,1]], axis=2)
-        misc.imsave('truth' + str(index) + '.png', synthesized_img_array)
-        if (plot):
+#        if (save):
+#            misc.imsave('truth' + str(index) + '.png', synthesized_img_array)
+#        if (plot):
 #            plt.imshow(synthesized_img_array)
 #            plt.axis('off')
 #            plt.title('Truth Img #' + str(index))
 #            plt.show()
-            display_LAB_img(synthesized_img_array, 'Truth', index)
+        rgb = display_LAB_img(synthesized_img_array, 'Truth', index)
+        if (save):
+            misc.imsave('truth' + str(index) + '.png', rgb)
             
 def display_LAB_img(img_lab, title_str, index):
     #convert to RGB
@@ -66,3 +73,7 @@ def display_LAB_img(img_lab, title_str, index):
     plt.axis('off')
     plt.title( title_str + ' Img #' + str(index))
     plt.show()
+    return img_rgb
+    
+
+comparePredictions(L_channel, AB_channel, pred_AB, True, True)

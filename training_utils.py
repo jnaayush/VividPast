@@ -7,20 +7,18 @@ Created on Fri Nov 23 21:42:26 2018
 """
 
 import time
-from os.path import join
-
-from save_config import dir_checkpoints, dir_root, maybe_create_folder
 #import numpy as np
 import tensorflow as tf
 #from skimage import color
+import os
+from os.path import join
+
+path_of_script = os.path.dirname(os.path.abspath(__file__))
+dir_root = join(path_of_script, 'vivid_past_model_files')
 
 
-#matplotlib.use('Agg')
-#matplotlib.rcParams['figure.figsize'] = (10.0, 4.0)
-#import matplotlib.pyplot as plt
-
-#labels_to_categories = pickle.load(
-#    open(join(dir_root, 'imagenet1000_clsid_to_human.pkl'), 'rb'))
+def maybe_create_folder(folder):
+    os.makedirs(folder, exist_ok=True)
 
 
 def loss_with_metrics(img_ab_out, img_ab_true, name=''):
@@ -82,12 +80,13 @@ def print_log(content, run_id):
 #
 def checkpointing_system(run_id):
     # Add ops to save and restore all the variables.
-    maybe_create_folder(join(dir_root, 'checkpoints', run_id))
+    run_path = join(dir_root, run_id)
+    checkpoint_path = join(run_path, 'checkpoints')
+    maybe_create_folder(checkpoint_path)
     
     saver = tf.train.Saver()
-    checkpoint_paths = join(dir_checkpoints, run_id)
-    latest_checkpoint = tf.train.latest_checkpoint(dir_checkpoints)
-    return  saver, checkpoint_paths, latest_checkpoint
+    latest_checkpoint = tf.train.latest_checkpoint(run_path)
+    return  saver, checkpoint_path, latest_checkpoint
 
 #
 #def plot_evaluation(res, run_id, epoch):

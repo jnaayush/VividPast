@@ -5,8 +5,10 @@
 """
 
 import itertools
-from os import makedirs
+import os
 from os.path import expanduser, join
+
+path_of_script = os.path.dirname(os.path.abspath(__file__))
 
 # Default folders
 dir_root = join(expanduser('~'), 'vivid_past_model_files')
@@ -18,7 +20,7 @@ dir_checkpoints = join(dir_root, 'checkpoints')
 
 
 def maybe_create_folder(folder):
-    makedirs(folder, exist_ok=True)
+    os.makedirs(folder, exist_ok=True)
 
 
 def progressive_filename_generator(pattern='file_{}.ext'):
