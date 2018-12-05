@@ -7,26 +7,55 @@ Created on Fri Nov 23 18:50:04 2018
 """
 
 import numpy as np
-#import os
+import os
+from os.path import join
 #os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 import tensorflow as tf
 
 from vivid_past_model_definition import VividPastAutoEncoder
 
-from training_utils import training_pipeline, checkpointing_system, evaluation_pipeline
+from training_utils import training_pipeline, checkpointing_system, evaluation_pipeline, maybe_create_folder
 #import import_data_test_jlo
     
     
 # PARAMETERS
 run_id = 'variable_test'
-total_epochs = 30
+total_epochs = 15
 num_test_samples = 1
 total_train_samples = 4
 batch_size = 2
 learning_rate = 0.001
+save_freq = 3
+
+# calculated params
 batches = total_train_samples // batch_size
 
+root_dir = join('vivid_past_model_files', run_id)
+metrics_dir = join(root_dir, 'metrics')
+predictions_dir = join(root_dir, 'predictions') 
+
+low_loss = -1;
+
+epoch_cost_save_path = metrics_dir +'/epoch_costs'
+maybe_create_folder(metrics_dir)
+maybe_create_folder(predictions_dir)
+
+# load file tracking loss history
+if os.path.isfile(epoch_cost_save_path + '.npy'):
+    print("Found metrics file:")
+    epoch_costs = np.load(epoch_cost_save_path + '.npy').item()
+    # reset lowest validation loss
+    low_loss = np.min(epoch_costs['validation'])
+    print('Low loss: ' + str(low_loss))
+    epoch_id = len(epoch_costs['training']) + 1
+    print('Last epoch finished: ', epoch_id - 1)
+else:
+    print('No metrics file found')
+    epoch_costs = {'training': np.array([]), 'validation': np.array([])}
+    epoch_id = 1
+
+print('\n')
 
 ##### LOAD DATA ####
 
@@ -65,13 +94,12 @@ evaluation = evaluation_pipeline(colorizer, testing_data_L, testing_data_AB)
 saver, checkpoint_paths, latest_checkpoint = checkpointing_system(run_id)
 
 #low_loss = tf.Variable(-1, name='low_loss', trainable=False)
-epoch_id = tf.Variable(1, name='epoch_id', trainable=False)
-low_loss = -1;
+#epoch_id = tf.Variable(1, name='epoch_id', trainable=False)
 
 with sess.as_default():
-#    # Initialize
-#    sess.run(tf.global_variables_initializer())
-#    sess.run(tf.local_variables_initializer())
+    # Initialize
+    sess.run(tf.global_variables_initializer())
+    sess.run(tf.local_variables_initializer())
 
     # Restore
     if latest_checkpoint is not None:
@@ -81,44 +109,53 @@ with sess.as_default():
     else:
         print('No checkpoint found in: {}'.format(checkpoint_paths), run_id)
         
-        # Initialize
-    sess.run(tf.global_variables_initializer())
-    sess.run(tf.local_variables_initializer())
 
-    epochs_not_finished = tf.less(epoch_id,total_epochs)
-    not_finished = sess.run(epochs_not_finished)
-    while not_finished:
-        epoch = sess.run(epoch_id)
+
+    while epoch_id <= total_epochs:
         print('Starting epoch: {} (total images {})'
-                  .format(epoch, total_train_samples))
+                  .format(epoch_id, total_train_samples))
         # Training step
+        epoch_training_loss = 0
         for batch in range(batches):
             print('Batch: {}/{}'.format(batch+1, batches))
             res = sess.run(training)
             global_step = res['global_step']
-            print('Cost: {} Global step: {}'
-                      .format(res['cost'], global_step))
+            print('Cost: {} Global step: {}'.format(res['cost'], global_step))
+            epoch_training_loss += res['cost']
 #            summary_writer.add_summary(res['summary'], global_step)
-
+        epoch_training_loss /= batches
+        
+        print()
+        print('Epoch {} Ended. Validating...'.format(epoch_id))
         # Evaluation step on validation
         res = sess.run(evaluation)
-        epoch_cost = res['cost']
-        print()
-        print('Epoch {} Ended. Validating...'.format(epoch))
-        epoch_id = epoch_id + 1
-#        print(sess.run(epoch_id))
-        print('Validation loss: {}'.format(epoch_cost))
+        epoch_val_cost = res['cost']
+        # add costs to arrays
+        epoch_costs['training'] = np.append(epoch_costs['training'], epoch_training_loss)
+        epoch_costs['validation'] = np.append(epoch_costs['validation'], epoch_val_cost)
+        np.save(epoch_cost_save_path, epoch_costs)
         
-        if (low_loss < 0 or low_loss > epoch_cost):
+#        print(sess.run(epoch_id))
+        print('Training loss: {}'.format(epoch_training_loss))
+        print('Validation loss: {}'.format(epoch_val_cost))
+        
+        if (low_loss < 0 or low_loss > epoch_val_cost):
 #            lowest_validation
+            low_loss = epoch_val_cost
             print('Improved Loss. Saving model...')
-#            tf.assign(low_loss, epoch_cost)
             # Save the variables to disk
             save_path = saver.save(sess, checkpoint_paths, global_step)
-            # Save predictions for validation set
-#            np.save('test_predictions' + '_' + run_id, res['predicted_ab'])
+            
 #            import_data_test_jlo.comparePredictions(testing_data_L, testing_data_AB, res['predicted_ab']):
             print("Model saved in: %s" % save_path, run_id)
+            
+        if (epoch_id % save_freq == 0):
+            # Save predictions for validation set
+            print('Saving predictions for epoch ', str(epoch_id))
+            np.save(predictions_dir + '/pred_ab' + '_ep' + str(epoch_id) + '_'+ str(epoch_val_cost), res['predicted_ab'])
+        
+        # increment epoch
+        epoch_id = epoch_id + 1
         print('----------------------------------------')
-        not_finished = sess.run(epochs_not_finished)
+
 

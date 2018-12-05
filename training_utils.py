@@ -72,10 +72,14 @@ def print_log(content, run_id):
         f.write('[{}] {}\n'.format(time.strftime("%c"), content))
 
 
-#def metrics_system(run_id, sess):
-#    # Merge all the summaries and set up the writers
-#    train_writer = tf.summary.FileWriter(join(dir_metrics, run_id), sess.graph)
-#    return train_writer
+def metrics_system(run_id, sess):
+    # Merge all the summaries and set up the writers
+    dir_metrics = join(dir_root, run_id, 'metrics')
+    maybe_create_folder(dir_metrics)
+    
+    
+    train_writer = tf.summary.FileWriter(dir_metrics, sess.graph)
+    return train_writer
 #
 #
 def checkpointing_system(run_id):
@@ -84,7 +88,7 @@ def checkpointing_system(run_id):
     checkpoint_path = join(run_path, 'checkpoints')
     maybe_create_folder(checkpoint_path)
     
-    saver = tf.train.Saver()
+    saver = tf.train.Saver(max_to_keep=3)
     latest_checkpoint = tf.train.latest_checkpoint(run_path)
     return  saver, checkpoint_path, latest_checkpoint
 
