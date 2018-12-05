@@ -18,15 +18,16 @@ from vivid_past_model_definition import VividPastAutoEncoder
 from training_utils import training_pipeline, checkpointing_system, evaluation_pipeline, maybe_create_folder
 #import import_data_test_jlo
     
+
     
 # PARAMETERS
-run_id = 'variable_test'
-total_epochs = 15
-num_test_samples = 1
-total_train_samples = 4
-batch_size = 2
+run_id = 'no_fusion_final_1'
+total_epochs = 2000
+num_test_samples = 50
+total_train_samples = 2500
+batch_size = 25
 learning_rate = 0.001
-save_freq = 3
+save_freq = 10
 
 # calculated params
 batches = total_train_samples // batch_size
@@ -36,6 +37,12 @@ metrics_dir = join(root_dir, 'metrics')
 predictions_dir = join(root_dir, 'predictions') 
 
 low_loss = -1;
+
+print('~~~~~~~~~~~~TRAINING ' + run_id + '~~~~~~~~~~~~')
+print('training on ' + str(total_train_samples) + ' images')
+print('testing on ' + str(num_test_samples) + ' images')
+print('batch size: ' + str(batch_size))
+print('set to save every: ' + str(save_freq) + ' epochs\n')
 
 epoch_cost_save_path = metrics_dir +'/epoch_costs'
 maybe_create_folder(metrics_dir)

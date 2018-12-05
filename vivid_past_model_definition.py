@@ -42,17 +42,17 @@ def build_encoder():
     # Input: 224x224x1
     model.add(Conv2D(64, (3, 3), activation='relu', padding='same', strides=2))
     # Now: 112x112x64
-#    model.add(Conv2D(128, (2, 2), activation='relu', padding='same', strides=1))
-#    # Now: 112x112x128
-#    model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
-#    # Now: 64x64x128
-#    model.add(Conv2D(256, (2, 2), activation='relu', padding='same', strides=1))
-#    # Now: 64x64x256
-#    model.add(Conv2D(256, (3, 3), activation='relu', padding='same', strides=2))
-#    # Now: 32x32x256
+    model.add(Conv2D(64, (2, 2), activation='relu', padding='same', strides=1))
+    # Now: 112x112x64
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
+    # Now: 56x56x128
+    model.add(Conv2D(128, (2, 2), activation='relu', padding='same', strides=1))
+    # Now: 64x64x256
+    model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
+    # Now: 32x32x256
     
-    print("USING TEST ARCHITECTURE -- change network def file")
-    model.add(Conv2D(64, (4, 4), activation='relu', padding='same', strides=4))
+#    print("USING TEST ARCHITECTURE -- change network def file")
+#    model.add(Conv2D(64, (4, 4), activation='relu', padding='same', strides=4))
     
     return model
 
