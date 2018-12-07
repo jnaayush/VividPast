@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sat Nov 17 13:37:52 2018
-@author: ryangreen & justinelo
+@author: justinelo
 """
 import numpy as np
 from scipy import misc
@@ -17,25 +17,30 @@ def parseEpoch(filename):
     pattern = re.compile('ep\d+')
     return pattern.search(filename).group()
 
-run_id = 'fusion_final_1'
+run_id = 'no_fusion_3'
 folder = 'test_predictions/' + run_id + '/'
-filename = 'pred_ab_ep200_0.09161054.npy'
+filename = 'training_pred_ab_ep100.npy'
 epoch = parseEpoch(filename)
+num_imgs = 50
+start_index = 0
 
-save_path = 'visualize/' + run_id + '/' + epoch + '/'
+dataset_type = '/train/'
+#dataset_type = '/validation/'
 
-L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[:50, :, :]
-AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[:50, :, :]
-pred_AB = np.round((np.load(folder + filename, mmap_mode='r') +1)*127.5).astype('uint8')
+save_path = 'visualize/' + run_id + dataset_type + epoch + '/'
 
+# load pre-computed scaling factors
+factors = np.load('scaling-factors-all-data.npy').item()
 
-#def scale_LAB(array):
-#    assert len(array.shape) == 3
-#    for x in range(array.shape[0]):
-#        for y in range(array.shape[1]):
-#             array[x,y] -= np.array([0, 128, 128]).astype('uint8')
-#             array[x,y,0] = (array[x,y,0] * (100/255)).astype('uint8')
-#    return array
+# for training prediction
+L_channel = np.round((np.load(folder + "l_channel_" + epoch + ".npy", mmap_mode='r') * factors["L_factor"]) + factors["L_mu"]).astype('uint8')[:,:,:,0]
+AB_channel = np.round((np.load(folder + "ab_channel_" + epoch + ".npy", mmap_mode='r') * factors["AB_factor"]) + factors["AB_mu"]).astype('uint8')
+pred_AB = np.round((np.load(folder + filename, mmap_mode='r') * factors["AB_factor"]) + factors["AB_mu"]).astype('uint8')
+
+# for validation predictions
+#L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[start_index:num_imgs+start_index, :, :]
+#AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[start_index:num_imgs+start_index, :, :]
+#pred_AB = np.round((np.load(folder + filename, mmap_mode='r') * factors["AB_factor"]) + factors["AB_mu"]).astype('uint8')
 
 
 # Synthesize and save ground truth vs predicted values of numpy arrays
@@ -54,41 +59,30 @@ def comparePredictions(L_channel, AB_channel, pred_AB, plot=False, savePred=Fals
                                           pred_AB[index,:,:,0],
                                           pred_AB[index,:,:,1]], 
                                             axis=2)
-#        if (save):
-#            misc.imsave('guess' + str(index) + '.png', synthesized_img_array)
-#        if (plot):
-#            plt.imshow(synthesized_img_array)
-#            plt.axis('off')
-#            plt.title('Predicted Img #' + str(index))
-#            plt.show()
-        rgb = display_LAB_img(synthesized_img_array, 'Predict', index)
+
+        rgb = display_LAB_img(synthesized_img_array, 'Predict', index, plot=plot)
         if (savePred):
             misc.imsave(save_path + 'guess' + str(index) + '.png', rgb)
 
         synthesized_img_array = np.stack([L_channel[index,:,:], 
                                           AB_channel[index,:,:,0], 
                                           AB_channel[index,:,:,1]], axis=2)
-#        if (save):
-#            misc.imsave('truth' + str(index) + '.png', synthesized_img_array)
-#        if (plot):
-#            plt.imshow(synthesized_img_array)
-#            plt.axis('off')
-#            plt.title('Truth Img #' + str(index))
-#            plt.show()
-        rgb = display_LAB_img(synthesized_img_array, 'Truth', index)
+
+        rgb = display_LAB_img(synthesized_img_array, 'Truth', index, plot=plot)
         if (saveTruth):
             misc.imsave(save_path + 'truth' + str(index) + '.png', rgb)
             
-def display_LAB_img(img_lab, title_str, index):
+def display_LAB_img(img_lab, title_str, index, plot=True):
     #convert to RGB
     img_rgb = cv2.cvtColor(img_lab, cv2.COLOR_LAB2RGB) 
   
     # plot the image 
-    plt.imshow(img_rgb, interpolation='nearest')
-    plt.axis('off')
-    plt.title( title_str + ' Img #' + str(index))
-    plt.show()
+    if plot:
+        plt.imshow(img_rgb, interpolation='nearest')
+        plt.axis('off')
+        plt.title( title_str + ' Img #' + str(index))
+        plt.show()
     return img_rgb
     
 
-#comparePredictions(L_channel, AB_channel, pred_AB, True, True, False)
+comparePredictions(L_channel, AB_channel, pred_AB, True, True, True)

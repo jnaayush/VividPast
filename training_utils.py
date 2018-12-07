@@ -26,15 +26,32 @@ def loss_with_metrics(img_ab_out, img_ab_true, name=''):
 #    cost = tf.reduce_mean(
 #        tf.squared_difference(img_ab_out, img_ab_true), name="mse")
     cost = tf.losses.absolute_difference(
-    img_ab_true,
-    img_ab_out,
-    weights=1.0,
-    scope=None,
-    loss_collection=tf.GraphKeys.LOSSES,
-    reduction=tf.losses.Reduction.SUM_BY_NONZERO_WEIGHTS)
+        img_ab_true,
+        img_ab_out,
+        weights=1.0,
+        scope=None,
+        loss_collection=tf.GraphKeys.LOSSES,
+        reduction=tf.losses.Reduction.SUM_BY_NONZERO_WEIGHTS)
     # Metrics for tensorboard
     summary = tf.summary.scalar('cost ' + name, cost)
     return cost, summary
+
+def fused_training_pipeline(colorizer, l_channel, ab_true, seg_data,learning_rate, batch_size, num_samples):
+    
+    predicted_ab = colorizer.build_with_fusion(l_channel,seg_data)
+#    cost = tf.reduce_mean(tf.squared_difference(predicted_ab, ab_true), name="mse")
+#    summary = tf.summary.scalar('cost training', cost)
+    cost, summary = loss_with_metrics(predicted_ab, ab_true, 'training')
+    global_step = tf.Variable(0, name='global_step', trainable=False)
+    optimizer = tf.train.AdamOptimizer(learning_rate).minimize(
+        cost, global_step=global_step)
+    return {
+        'global_step': global_step,
+        'optimizer': optimizer,
+        'cost': cost,
+        'summary': summary,
+        'training_pred': predicted_ab[:10]
+    }#, irr, read_batched_examples
 
 
 def training_pipeline(colorizer, l_channel, ab_true, learning_rate, batch_size, num_samples):
@@ -50,7 +67,8 @@ def training_pipeline(colorizer, l_channel, ab_true, learning_rate, batch_size, 
         'global_step': global_step,
         'optimizer': optimizer,
         'cost': cost,
-        'summary': summary
+        'summary': summary,
+        'training_pred': predicted_ab[:10]
     }#, irr, read_batched_examples
 
 
@@ -65,6 +83,18 @@ def evaluation_pipeline(colorizer, l_channel, ab_channel):
         'cost': cost,
         'summary': summary
     }
+    
+def fused_evaluation_pipeline(colorizer, l_channel, seg_data, ab_channel):
+# Set up validation (input queues, graph)
+    imgs_ab_val = colorizer.build_with_fusion(l_channel, seg_data)
+    cost, summary = loss_with_metrics(imgs_ab_val, ab_channel, 'validation')
+    return {
+    #        'imgs_l': l_channel,
+        'predicted_ab': imgs_ab_val,
+    #        'imgs_true_ab': ab_channel,
+        'cost': cost,
+        'summary': summary
+}
 
 
 def print_log(content, run_id):
