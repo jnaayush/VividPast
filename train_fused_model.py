@@ -1,3 +1,6 @@
+
+
+
 """
 Created on Fri Nov 23 18:50:04 2018
 
@@ -7,19 +10,19 @@ Created on Fri Nov 23 18:50:04 2018
 import numpy as np
 import os
 from os.path import join
-os.environ['KMP_DUPLICATE_LIB_OK']='True'
+#os.environ['KMP_DUPLICATE_LIB_OK']='True'
 
 import tensorflow as tf
 
 from vivid_past_model_definition import VividPastAutoEncoder
 
-from training_utils import training_pipeline, checkpointing_system, evaluation_pipeline, maybe_create_folder
+from training_utils import fused_training_pipeline, checkpointing_system, fused_evaluation_pipeline, maybe_create_folder
 #import import_data_test_jlo
     
 
     
 # PARAMETERS
-run_id = 'no_fusion_3'
+run_id = 'fusion_3'
 total_epochs = 2000
 num_test_samples = 50
 total_train_samples = 1000
@@ -62,28 +65,32 @@ else:
 
 print('\n')
 
+##### LOAD DATA ####
+
 def load_data():
     L_channel = np.load("image-colorization/gray_scale.npy", mmap_mode='r')[:total_train_samples+num_test_samples, :, :]
     L_channel = np.expand_dims(L_channel, axis=3)
     L_channel = ((L_channel - np.mean(L_channel, axis=(0,1,2))) / np.std(L_channel, axis=(0,1,2)) / 2).astype('float32')
     AB_channel = np.load("image-colorization/ab/ab1.npy", mmap_mode='r')[:total_train_samples+num_test_samples, :, :]
     AB_channel = ((AB_channel - np.mean(AB_channel, axis=(0,1,2))) / np.std(AB_channel, axis=(0,1,2)) / 2).astype('float32')
+    seg_data_raw = np.load("segmentation_arrays/segmentation_data_5000.npy", mmap_mode='r')[:total_train_samples+num_test_samples, :, :]
+    seg_data = seg_data_raw / np.max(seg_data_raw, axis=(0,1,2))
 
     # Create tf Dataset and iterator for feeding data in batches
-    training_data = tf.data.Dataset.from_tensor_slices((L_channel[num_test_samples:], AB_channel[num_test_samples:]))
+    training_data = tf.data.Dataset.from_tensor_slices((L_channel[num_test_samples:], AB_channel[num_test_samples:],seg_data[num_test_samples:]))
     training_data = training_data.repeat().shuffle(buffer_size=50).batch(batch_size)
     iterator = training_data.make_one_shot_iterator()
     
     # make Validation Dataset
-    testing_data_L = L_channel[:num_test_samples]
-    testing_data_AB = AB_channel[:num_test_samples]
+    testing_data_L = L_channel[:num_test_samples,:,:]
+    testing_data_AB = AB_channel[:num_test_samples,:,:]
+    testing_seg = seg_data[:num_test_samples,:,:]
     
-    return training_data, iterator, testing_data_L, testing_data_AB
+    return training_data, iterator, testing_data_L, testing_data_AB, testing_seg
 
 ##### LOAD DATA ####
 
-training_data, iterator, testing_data_L, testing_data_AB = load_data()
-
+training_data, iterator, testing_data_L, testing_data_AB, testing_seg = load_data()
 ###### BUILD MODEL #######
 
 # START
@@ -93,12 +100,12 @@ sess = tf.Session()
 #K.set_session(sess)
 
 # Build the network and the various operations
-colorizer = VividPastAutoEncoder(128)
+colorizer = VividPastAutoEncoder(149)
 
 # get next batch
-l_channel, ab_true = iterator.get_next()
-training = training_pipeline(colorizer, l_channel, ab_true, learning_rate, batch_size, total_train_samples)
-evaluation = evaluation_pipeline(colorizer, testing_data_L, testing_data_AB)
+l_channel, ab_true, seg = iterator.get_next()
+training = fused_training_pipeline(colorizer, l_channel, ab_true, seg, learning_rate, batch_size, total_train_samples)
+evaluation = fused_evaluation_pipeline(colorizer, testing_data_L, testing_seg, testing_data_AB)
 #summary_writer = metrics_system(run_id, sess)
 saver, checkpoint_paths, latest_checkpoint = checkpointing_system(run_id)
 
@@ -131,6 +138,7 @@ with sess.as_default():
             global_step = res['global_step']
             print('Cost: {} Global step: {}'.format(res['cost'], global_step))
             epoch_training_loss += res['cost']
+            
             if (batch == 0 and epoch_id % save_freq == 0):
                 np.save(predictions_dir + '/training_pred_ab_ep' + str(epoch_id), res['training_pred'])
 #            summary_writer.add_summary(res['summary'], global_step)

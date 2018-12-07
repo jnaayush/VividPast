@@ -6,7 +6,7 @@ Created on Fri Nov 23 17:51:14 2018
 @author: ryangreen
 """
 import tensorflow as tf
-from tensorflow.keras.layers import Conv2D, UpSampling2D, InputLayer, Layer, concatenate
+from tensorflow.keras.layers import Conv2D, UpSampling2D, InputLayer, concatenate
 
 
 #####################################################################
@@ -15,22 +15,21 @@ class VividPastAutoEncoder():
     
     def __init__(self, fused_layer_length):
         self.encoder = build_encoder()
-#        self.fusion = FusionLayer()
-#        self.after_fusion = Conv2D(depth_after_fusion, (1, 1), activation='relu')
+        self.fusion_layer = Conv2D(fused_layer_length, (1, 1), activation='relu')
         self.decoder = build_decoder(fused_layer_length)
 
     def build(self, l_channel):
         img_enc = self.encoder(l_channel)
-#        fusion = self.fusion([img_enc, img_emb])
-#        fusion = self.after_fusion(fusion)
         return self.decoder(img_enc)
     
+    def build_with_fusion(self, l_channel, seg_data):
+        img_enc = self.encoder(l_channel)
+        post_fusion = self.fusion_layer(fuse(img_enc, seg_data))
+        return self.decoder(post_fusion)
 #####################################################################
-    
-class FusionLayer(Layer):
-    
-    def fuse(self, encoded_output, classification_output):
-        return concatenate([encoded_output, classification_output], axis=3)
+
+def fuse( encoded_output, classification_output):
+    return concatenate([encoded_output, classification_output], axis=3)
         # CONCAT image semantic segmentation output with encoder output layer
   
 #####################################################################  
@@ -38,18 +37,32 @@ class FusionLayer(Layer):
         
 def build_encoder():
     model = tf.keras.Sequential(name='encoder')
+#    model.add(InputLayer(input_shape=(None,None,1), dtype='float32'))
+#    # Input: 224x224x1
+#    model.add(Conv2D(64, (3, 3), activation='relu', padding='same', strides=2))
+#    # Now: 112x112x64
+#    model.add(Conv2D(64, (2, 2), activation='relu', padding='same', strides=1))
+#    # Now: 112x112x64
+#    model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
+#    # Now: 56x56x128
+#    model.add(Conv2D(128, (2, 2), activation='relu', padding='same', strides=1))
+#    # Now: 56x56x128
+#    model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
+#    # Now: 28x28x128
+    
     model.add(InputLayer(input_shape=(None,None,1), dtype='float32'))
     # Input: 224x224x1
+    model.add(Conv2D(32, (3, 3), activation='relu', padding='same', strides=2))
+    # Now: 112x112x32
+    model.add(Conv2D(32, (2, 2), activation='relu', padding='same', strides=1))
+    # Now: 112x112x32
     model.add(Conv2D(64, (3, 3), activation='relu', padding='same', strides=2))
-    # Now: 112x112x64
+    # Now: 56x56x64
     model.add(Conv2D(64, (2, 2), activation='relu', padding='same', strides=1))
-    # Now: 112x112x64
+    # Now: 56x56x64
     model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
-    # Now: 56x56x128
-    model.add(Conv2D(128, (2, 2), activation='relu', padding='same', strides=1))
-    # Now: 64x64x256
-    model.add(Conv2D(128, (3, 3), activation='relu', padding='same', strides=2))
-    # Now: 32x32x256
+    # Now: 28x28x128
+    
     
 #    print("USING TEST ARCHITECTURE -- change network def file")
 #    model.add(Conv2D(64, (4, 4), activation='relu', padding='same', strides=4))
