@@ -19,15 +19,15 @@ J_{img}(L,Y)= \sum_{x∈W} \sum_{y∈H} \sum_{c∈\{A,B\}} |h_c(L_{x,y})−Y_{c_
 $$
 
 #### Network Architecture
-![NW](/media/NW.jpg "Netowrk Architecture")
+![NW](NW.jpg "Netowrk Architecture")
 
 #### Convolution Auto-Encoder
 
-![NW](/media/NW1.jpg "Netowrk Architecture")
+![NW](NW1.jpg "Netowrk Architecture")
 
 #### Results
 
-![R](/media/R1.jpg "Result")
+![R](R1.jpg "Result")
 
-![R](/media/R2.jpg "Result")
+![R](R2.jpg "Result")
 
